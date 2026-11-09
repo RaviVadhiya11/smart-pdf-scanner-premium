@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#155eef"><meta name="description" content="Smart PDF Scanner Ultimate - document and PDF tools">
+<link rel="manifest" href="manifest.webmanifest"><title>Smart PDF Scanner Ultimate</title>
+<style>
+:root{--blue:#155eef;--dark:#14294b;--muted:#667892;--bg:#f3f6fc;--line:#e4eaf3}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:system-ui,Arial,sans-serif;color:var(--dark)}
+header{background:linear-gradient(135deg,#1048bd,#328df8);color:white;padding:23px 18px 27px;border-radius:0 0 25px 25px}
+header h1{margin:0;font-size:24px}header p{margin:6px 0 0;font-size:13px;color:#e6efff}
+main{max-width:760px;margin:auto;padding:15px}.card{background:#fff;border-radius:17px;padding:15px;margin-bottom:13px;box-shadow:0 5px 18px #193b700b}
+h2{font-size:16px;margin:0 0 12px}.sub{font-size:12px;color:var(--muted);line-height:1.5}
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.tool{background:#eef4ff;color:#174fbe;padding:13px 5px;border-radius:13px;text-align:center;font-weight:700;font-size:12px;border:0;min-height:76px}
+.tool span{display:block;font-size:22px;margin-bottom:5px}
+button,.pick{border:0;border-radius:11px;padding:12px 13px;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
+.primary{background:var(--blue);color:#fff}.soft{background:#edf3ff;color:#1555cc}.danger{background:#fff0f0;color:#b42318}
+.pick{display:inline-block;background:#edf3ff;color:#1555cc}
+input[type=file]{display:none}input[type=text],input[type=number],select,textarea{width:100%;padding:11px;border:1px solid #dce4ef;border-radius:10px;margin:6px 0 10px;background:white;color:var(--dark)}
+textarea{min-height:90px}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:120px}
+.pages{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.page{border:1px solid var(--line);border-radius:11px;padding:7px;position:relative}
+.page img{width:100%;height:130px;object-fit:contain;background:#f7f9fc;border-radius:8px}.page small{display:block;color:var(--muted);padding:5px;overflow-wrap:anywhere}
+.status{font-size:12px;color:#155eef;min-height:18px;margin-top:8px;white-space:pre-wrap}
+.hidden{display:none!important}.tab{display:none}.tab.active{display:block}
+canvas{max-width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;touch-action: none}
+#signatureCanvas{width:100%;height:180px}#qrVideo{width:100%;max-height:260px;background:#111;border-radius:12px}
+footer{text-align:center;color:#8a98ad;font-size:11px;padding:8px 0 25px}
+@media(min-width:560px){.tools{grid-template-columns:repeat(4,1fr)}}
+</style></head>
+<body>
+<header><h1>Smart PDF Scanner</h1><p>Scan · PDF Tools · ID Photo · Edit · Sign · OCR · QR</p></header>
+<main>
+<section class="card"><h2>All Premium Tools</h2><div class="tools">
+<button class="tool" onclick="show('scan')"><span>📷</span>Document Scan</button>
+<button class="tool" onclick="show('pdftools')"><span>📑</span>PDF Tools</button>
+<button class="tool" onclick="show('idphoto')"><span>🪪</span>ID Photo</button>
+<button class="tool" onclick="show('editor')"><span>✏️</span>PDF Editor</button>
+<button class="tool" onclick="show('sign')"><span>✍️</span>Signature</button>
+<button class="tool" onclick="show('ocr')"><span>🔤</span>Image to Text</button>
+<button class="tool" onclick="show('qr')"><span>▦</span>QR Scanner</button>
+<button class="tool" onclick="show('trash')"><span>🗑️</span>Trash</button>
+<button class="tool" onclick="show('files')"><span>📂</span>My Files</button>
+</div><p class="sub">Choose a tool. Files are processed locally in your browser where supported.</p></section>
+
+<section id="scan" class="tab active card"><h2>📷 Document Scanner</h2>
+<div class="row"><label class="pick">Open Camera<input id="camera" type="file" accept="image/*" capture="environment"></label><label class="pick">Import Images<input id="gallery" type="file" accept="image/*" multiple></label></div>
+<p class="sub">Add multiple pages, rotate, apply filters and export one PDF. Camera capture depends on your browser/device.</p>
+<div class="row"><button class="soft" id="rotate">↻ Rotate pages</button><button class="soft" id="bw">Black & White</button><button class="soft" id="gray">Grayscale</button><button class="soft" id="reset">Reset filters</button></div>
+<h2 style="margin-top:15px">Pages <small id="count">(0)</small></h2><div id="pages" class="pages"></div><p id="empty" class="sub">No pages added yet.</p>
+<div class="row"><button class="primary" id="createPdf">Create PDF</button><button class="danger" id="clearPages">Clear pages</button></div><div id="scanStatus" class="status"></div></section>
+
+<section id="pdftools" class="tab card"><h2>📑 PDF Tools</h2><label class="pick">Choose PDF<input id="pdfInput" type="file" accept="application/pdf"></label>
+<p class="sub">Select a PDF to view its basic information and perform available actions.</p><div id="pdfInfo" class="sub">No PDF selected.</div>
+<div class="row"><button class="soft" id="pdfMergeHint">Merge PDFs</button><label class="pick">Add PDFs<input id="pdfMulti" type="file" accept="application/pdf" multiple></label></div>
+<div class="row"><button class="soft" id="merge">Merge selected PDFs</button><button class="soft" id="split">Split selected PDF pages</button></div>
+<label class="sub">Page number for split (one page per output file)</label><input id="splitPage" type="number" min="1" value="1">
+<div class="row"><button class="soft" id="rotatePdf">Rotate all pages 90°</button><button class="soft" id="compressHint">Compress guidance</button></div>
+<div id="pdfStatus" class="status"></div></section>
+
+<section id="idphoto" class="tab card"><h2>🪪 ID Photo Maker</h2><label class="pick">Choose portrait<input id="idInput" type="file" accept="image/*"></label>
+<label class="sub">Photo size</label><select id="idSize"><option value="35x45">35 × 45 mm (common ID)</option><option value="25x35">25 × 35 mm</option><option value="2x2">2 × 2 inch</option><option value="passport">Passport-style 4 × 6 inch sheet (multiple copies)</option></select>
+<label class="sub">Background</label><select id="idBg"><option value="white">White</option><option value="blue">Light blue</option><option value="keep">Keep original</option></select>
+<canvas id="idCanvas" width="413" height="531"></canvas>
+<div class="row"><button class="primary" id="makeId">Create ID Photo</button><button class="soft" id="downloadId">Download JPG</button></div><p class="sub">This tool resizes/crops a portrait; it does not automatically remove a complex background. Check official photo rules before using it for government documents.</p><div id="idStatus" class="status"></div></section>
+
+<section id="editor" class="tab card"><h2>✏️ PDF Editor</h2><p class="sub">Choose a PDF, then add a text note or signature as a new page overlay/export. Original PDF editing is limited in this browser prototype.</p>
+<label class="pick">Choose PDF<input id="editPdf" type="file" accept="application/pdf"></label>
+<label class="sub">Text to add</label><input id="editText" type="text" placeholder="Enter text / note">
+<label class="sub">Position</label><select id="textPosition"><option value="bottom">Bottom of each page</option><option value="top">Top of each page</option></select>
+<button class="primary" id="addTextPdf">Add text to PDF & download</button><div id="editStatus" class="status"></div></section>
+
+<section id="sign" class="tab card"><h2>✍️ Signature Pad</h2><p class="sub">Draw your signature below using your finger.</p><canvas id="signatureCanvas" width="700" height="260"></canvas>
+<div class="row"><button class="soft" id="clearSign">Clear</button><button class="primary" id="saveSign">Save Signature PNG</button></div><label class="pick">Add signature image to scanned pages<input id="signImport" type="file" accept="image/*"></label><div id="signStatus" class="status"></div></section>
+
+<section id="ocr" class="tab card"><h2>🔤 Images to Text (OCR)</h2><label class="pick">Choose image<input id="ocrInput" type="file" accept="image/*"></label><p class="sub">OCR uses a downloadable language engine and needs internet the first time.</p>
+<select id="ocrLang"><option value="eng">English</option><option value="hin">Hindi</option><option value="guj">Gujarati</option></select>
+<button class="primary" id="runOcr">Extract Text</button><textarea id="ocrText" placeholder="Extracted text will appear here"></textarea><button class="soft" id="copyOcr">Copy text</button><div id="ocrStatus" class="status"></div></section>
+
+<section id="qr" class="tab card"><h2>▦ QR Scanner</h2><p class="sub">Use camera to scan a QR code. Camera permission is required.</p>
+<button class="primary" id="startQr">Start QR Camera</button><button class="soft" id="stopQr">Stop Camera</button><video id="qrVideo" playsinline></video><canvas id="qrCanvas" class="hidden"></canvas><textarea id="qrResult" placeholder="QR result will appear here"></textarea><div id="qrStatus" class="status"></div></section>
+
+<section id="trash" class="tab card"><h2>🗑️ Trash / Recycle Bin</h2><p class="sub">Deleted items from this session appear here. This browser demo does not automatically scan your phone storage.</p><div id="trashList" class="sub">Trash is empty.</div><button class="danger" id="emptyTrash">Empty Trash</button></section>
+<section id="files" class="tab card"><h2>📂 My Files</h2><p class="sub">PDF and image downloads are saved by your browser in your device's Downloads folder. Open your phone's Files app to manage them.</p><button class="soft" onclick="show('scan')">Back to Scanner</button></section>
+<footer>Smart PDF Scanner · Ultimate feature prototype</footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+const $=id=>document.getElementById(id), pages=[], trash=[];let filter='normal', idImage=null, ocrImage=null, pdfFile=null, multiPdfs=[], qrStream=null, signImage=null;
+function show(id){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');window.scrollTo(0,0)}
+function say(id,msg){$(id).textContent=msg}
+function addImages(files){[...files].forEach(f=>{if(!f.type.startsWith('image/'))return;let r=new FileReader();r.onload=()=>{pages.push({src:r.result,name:f.name,rot:0});renderPages()};r.readAsDataURL(f)})}
+['camera','gallery'].forEach(id=>$(id).addEventListener('change',e=>{addImages(e.target.files);e.target.value=''}));
+function renderPages(){$('pages').innerHTML='';pages.forEach((p,i)=>{let d=document.createElement('div');d.className='page';let im=document.createElement('img');im.src=p.src;im.style.transform=`rotate(${p.rot}deg)`;im.style.filter=filter==='bw'?'grayscale(1) contrast(2)':filter==='gray'?'grayscale(1)':'none';let sm=document.createElement('small');sm.textContent=`Page ${i+1}: ${p.name}`;let b=document.createElement('button');b.className='danger';b.textContent='Delete';b.onclick=()=>{trash.push(p);pages.splice(i,1);renderPages();renderTrash()};d.append(im,sm,b);$('pages').append(d)});$('count').textContent=`(${pages.length})`;$('empty').style.display=pages.length?'none':'block'}
+$('rotate').onclick=()=>{pages.forEach(p=>p.rot=(p.rot+90)%360);renderPages()};$('bw').onclick=()=>{filter='bw';renderPages()};$('gray').onclick=()=>{filter='gray';renderPages()};$('reset').onclick=()=>{filter='normal';pages.forEach(p=>p.rot=0);renderPages()};
+$('clearPages').onclick=()=>{trash.push(...pages.splice(0));renderPages();renderTrash();say('scanStatus','Pages moved to Trash.')};
+function imageToJpeg(p){return new Promise((resolve,reject)=>{let im=new Image();im.onload=()=>{let swap=Math.abs(p.rot)%180===90,c=document.createElement('canvas');c.width=swap?im.height:im.width;c.height=swap?im.width:im.height;let x=c.getContext('2d');x.translate(c.width/2,c.height/2);x.rotate(p.rot*Math.PI/180);x.filter=filter==='bw'?'grayscale(1) contrast(2)':filter==='gray'?'grayscale(1)':'none';x.drawImage(im,-im.width/2,-im.height/2);resolve(c.toDataURL('image/jpeg',.9))};im.onerror=reject;im.src=p.src})}
+$('createPdf').onclick=async()=>{if(!pages.length)return say('scanStatus','Add pages first.');if(!window.jspdf)return say('scanStatus','PDF library failed to load. Connect to internet.');try{say('scanStatus','Creating PDF…');let {jsPDF}=window.jspdf,pdf=new jsPDF({unit:'pt',format:'a4'}),w=pdf.internal.pageSize.getWidth(),h=pdf.internal.pageSize.getHeight();for(let i=0;i<pages.length;i++){if(i)pdf.addPage();let data=await imageToJpeg(pages[i]),im=new Image();im.src=data;await new Promise(r=>im.onload=r);let k=Math.min((w-28)/im.width,(h-28)/im.height);pdf.addImage(data,'JPEG',(w-im.width*k)/2,(h-im.height*k)/2,im.width*k,im.height*k)}pdf.save('Smart-Scanner.pdf');say('scanStatus','PDF created and downloaded.')}catch(e){say('scanStatus','PDF creation failed. Try smaller images.')}};
+$('pdfInput').onchange=e=>{pdfFile=e.target.files[0];say('pdfInfo',pdfFile?`${pdfFile.name} · ${(pdfFile.size/1024/1024).toFixed(2)} MB`:'No PDF selected')};
+$('pdfMulti').onchange=e=>{multiPdfs=[...e.target.files];say('pdfStatus',`${multiPdfs.length} PDF file(s) selected.`)};
+$('pdfMergeHint').onclick=()=>say('pdfStatus','Select two or more PDFs using Add PDFs, then tap Merge selected PDFs.');
+$('compressHint').onclick=()=>say('pdfStatus','Tip: To reduce size, scan at a lower camera resolution or use grayscale. Full PDF compression is not included in this prototype.');
+$('merge').onclick=async()=>{if(!multiPdfs.length)return say('pdfStatus','Select PDF files first.');try{let out=await PDFLib.PDFDocument.create();for(let f of multiPdfs){let doc=await PDFLib.PDFDocument.load(await f.arrayBuffer());let copied=await out.copyPages(doc,doc.getPageIndices());copied.forEach(p=>out.addPage(p))}downloadBytes(await out.save(),'Merged-PDF.pdf','application/pdf');say('pdfStatus','Merged PDF downloaded.')}catch(e){say('pdfStatus','Could not merge. Some PDFs may be encrypted or invalid.')}};
+$('split').onclick=async()=>{if(!pdfFile)return say('pdfStatus','Choose one PDF first.');try{let doc=await PDFLib.PDFDocument.load(await pdfFile.arrayBuffer());for(let i=0;i<doc.getPageCount();i++){let out=await PDFLib.PDFDocument.create(),[p]=await out.copyPages(doc,[i]);out.addPage(p);downloadBytes(await out.save(),`page-${i+1}.pdf`,'application/pdf')}say('pdfStatus',`Exported ${doc.getPageCount()} single-page PDF(s).`)}catch(e){say('pdfStatus','Could not split this PDF.')}};
+$('rotatePdf').onclick=async()=>{if(!pdfFile)return say('pdfStatus','Choose a PDF first.');try{let d=await PDFLib.PDFDocument.load(await pdfFile.arrayBuffer());d.getPages().forEach(p=>p.setRotation(PDFLib.degrees((p.getRotation().angle+90)%360)));downloadBytes(await d.save(),'Rotated-PDF.pdf','application/pdf');say('pdfStatus','Rotated PDF downloaded.')}catch(e){say('pdfStatus','Could not rotate PDF.')}};
+function downloadBytes(bytes,name,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([bytes],{type}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),3000)}
+$('idInput').onchange=e=>{let f=e.target.files[0];if(!f)return;let im=new Image();im.onload=()=>{idImage=im;drawId()};im.src=URL.createObjectURL(f)};
+function drawId(){if(!idImage)return;let c=$('idCanvas'),ctx=c.getContext('2d'),size=$('idSize').value,bg=$('idBg').value;let dims=size==='2x2'?[600,600]:size==='25x35'?[295,413]:[413,531];c.width=dims[0];c.height=dims[1];ctx.fillStyle=bg==='blue'?'#dceeff':'#fff';ctx.fillRect(0,0,c.width,c.height);let scale=Math.max(c.width/idImage.width,c.height/idImage.height),w=idImage.width*scale,h=idImage.height*scale;ctx.drawImage(idImage,(c.width-w)/2,(c.height-h)/2,w,h)}
+$('idSize').onchange=drawId;$('idBg').onchange=drawId;$('makeId').onclick=()=>{if(!idImage)return say('idStatus','Choose a portrait first.');drawId();say('idStatus','ID photo preview created.')};$('downloadId').onclick=()=>{if(!idImage)return say('idStatus','Choose a portrait first.');$('idCanvas').toBlob(b=>{let u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='ID-Photo.jpg';a.click();URL.revokeObjectURL(u)},'image/jpeg',.95)};
+$('editPdf').onchange=e=>{pdfFile=e.target.files[0];say('editStatus',pdfFile?'PDF selected.':'')};
+$('addTextPdf').onclick=async()=>{if(!pdfFile)return say('editStatus','Choose a PDF first.');let txt=$('editText').value;if(!txt)return say('editStatus','Enter text first.');try{let d=await PDFLib.PDFDocument.load(await pdfFile.arrayBuffer()),font=await d.embedFont(PDFLib.StandardFonts.Helvetica);d.getPages().forEach(p=>{let {width,height}=p.getSize();p.drawText(txt,{x:35,y:$('textPosition').value==='top'?height-45:25,size:12,font,color:PDFLib.rgb(.08,.2,.48)})});downloadBytes(await d.save(),'Edited-PDF.pdf','application/pdf');say('editStatus','Text added to each page; edited PDF downloaded.')}catch(e){say('editStatus','Could not edit this PDF.')}};
+const sc=$('signatureCanvas'),sctx=sc.getContext('2d');sctx.lineWidth=4;sctx.lineCap='round';let drawing=false;function pos(e){let r=sc.getBoundingClientRect();return{x:(e.clientX-r.left)*sc.width/r.width,y:(e.clientY-r.top)*sc.height/r.height}}sc.addEventListener('pointerdown',e=>{drawing=true;sc.setPointerCapture(e.pointerId);let p=pos(e);sctx.beginPath();sctx.moveTo(p.x,p.y)});sc.addEventListener('pointermove',e=>{if(!drawing)return;let p=pos(e);sctx.lineTo(p.x,p.y);sctx.stroke()});['pointerup','pointercancel'].forEach(ev=>sc.addEventListener(ev,()=>drawing=false));
+$('clearSign').onclick=()=>sctx.clearRect(0,0,sc.width,sc.height);$('saveSign').onclick=()=>sc.toBlob(b=>{let u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='Signature.png';a.click();URL.revokeObjectURL(u);say('signStatus','Signature PNG downloaded.')});
+$('signImport').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{signImage=r.result;pages.push({src:signImage,name:'Signature.png',rot:0});renderPages();say('signStatus','Signature added as a page. To place it precisely on an existing PDF, use a full PDF annotation editor.')};r.readAsDataURL(f)};
+$('ocrInput').onchange=e=>{let f=e.target.files[0];if(!f)return;ocrImage=URL.createObjectURL(f);say('ocrStatus','Image selected.')};
+$('runOcr').onclick=async()=>{if(!ocrImage)return say('ocrStatus','Choose an image first.');if(!window.Tesseract)return say('ocrStatus','OCR engine could not load. Connect to internet.');try{say('ocrStatus','Reading image… please wait.');let lang=$('ocrLang').value,res=await Tesseract.recognize(ocrImage,lang,{logger:m=>{if(m.status)say('ocrStatus',m.status)}});$('ocrText').value=res.data.text;say('ocrStatus','Text extraction complete.')}catch(e){say('ocrStatus','OCR failed. Check internet and try again.')}};
+$('copyOcr').onclick=async()=>{try{await navigator.clipboard.writeText($('ocrText').value);say('ocrStatus','Text copied.')}catch(e){say('ocrStatus','Select and copy the text manually.')}};
+$('startQr').onclick=async()=>{try{if(!navigator.mediaDevices?.getUserMedia)return say('qrStatus','Camera API unavailable. Open the site over HTTPS.');qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});$('qrVideo').srcObject=qrStream;await $('qrVideo').play();say('qrStatus','Camera running. Point it at a QR code.');scanQr()}catch(e){say('qrStatus','Camera permission denied or unavailable.')}}
+function scanQr(){if(!qrStream)return;let v=$('qrVideo'),c=$('qrCanvas'),ctx=c.getContext('2d');if(v.readyState===v.HAVE_ENOUGH_DATA){c.width=v.videoWidth;c.height=v.videoHeight;ctx.drawImage(v,0,0,c.width,c.height);let d=ctx.getImageData(0,0,c.width,c.height),code=window.jsQR?.(d.data,d.width,d.height);if(code){$('qrResult').value=code.data;say('qrStatus','QR code detected.');stopQr();return}}requestAnimationFrame(scanQr)}
+function stopQr(){if(qrStream){qrStream.getTracks().forEach(t=>t.stop());qrStream=null}$('qrVideo').srcObject=null} $('stopQr').onclick=stopQr;
+function renderTrash(){let el=$('trashList');el.innerHTML='';if(!trash.length){el.textContent='Trash is empty.';return}trash.forEach((p,i)=>{let d=document.createElement('div');d.className='row';let s=document.createElement('span');s.textContent=p.name;let b=document.createElement('button');b.className='soft';b.textContent='Restore';b.onclick=()=>{pages.push(trash.splice(i,1)[0]);renderPages();renderTrash()};d.append(s,b);el.append(d)})}
+$('emptyTrash').onclick=()=>{trash.length=0;renderTrash()};renderPages();
+</script></body></html>
